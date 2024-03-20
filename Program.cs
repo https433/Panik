@@ -1,100 +1,74 @@
-﻿using Panik.Klass;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
+using Panik.Klass;
 
 namespace Panik
 {
     public record App(
-        [property: JsonPropertyName("_key")] string _key,
-        [property: JsonPropertyName("_name")] string _name,
-        [property: JsonPropertyName("_isforced")] bool _isforced
+        [JsonProperty("_key")] string _key,
+        [JsonProperty("_name")] string _name,
+        [JsonProperty("_isforced")] bool _isforced
     );
 
     public record Program(
-        [property: JsonPropertyName("app")] IReadOnlyList<App> app
+        [JsonProperty("app")] IReadOnlyList<App> app
     );
 
     public record Root(
-        [property: JsonPropertyName("v")] int v,
-        [property: JsonPropertyName("logdir")] string logdir,
-        [property: JsonPropertyName("program")] Program program
+        [JsonProperty("v")] int v,
+        [JsonProperty("logdir")] string logdir,
+        [JsonProperty("program")] Program program
     );
 
     public class Klean
     {
-        [RequiresDynamicCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
-        [RequiresUnreferencedCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
         static void Main()
         {
-            string AppSetings = Path.Combine(Environment.CurrentDirectory, "settings.json");
-            if (!File.Exists(AppSetings))
-                ThrwCslErr($"{AppSetings} doesnt exist!");
+            string AppSettingsPath = Path.Combine(Environment.CurrentDirectory, "settings.json");
+            if (!File.Exists(AppSettingsPath))
+                ThrwCslErr($"{AppSettingsPath} doesn't exist!");
 
-            Json(out string json);
-            Root ProgramSettings = JsonSerializer.Deserialize<Root>(json);
+            string json = File.ReadAllText(AppSettingsPath);
+
+            Root ProgramSettings = JsonConvert.DeserializeObject<Root>(json);
 
             if (ProgramSettings?.v == null)
-                ThrwCslErr($"Error In Settings.json {ProgramSettings?.v} is null!");
+                ThrwCslErr($"Error in settings.json: 'v' is null!");
             if (ProgramSettings?.v is > 1 or 0)
-                ThrwCslErr("Invalid Settings Version");
+                ThrwCslErr("Invalid settings version");
 
+            string LogFile = "ProcessTerminationLog.txt";
 
-
-            string LogFil = "ProcessTerminationLog.txt";
-            string[] NoKil = {
-                "cmd",
-                "explorer",
-                "taskmgr",
-                "panik",
-                "proton",
-                "proton vpn",
-                "NLClientApp",
-                "FL64",
-                "xampp",
-                "ProcessLasso",
-                "vpn",
-                "tailscale",
-                "chrome",
-                "firefox",
-                "5795795798567957",
-                "fences",
-                "dwm",
-                "discord",
-                "devenv",
-                "svchost",
-                "brave",
-                "conhost",
-                "ctfmon",
-                "sihost",
-                "nvcontainer",
-                "Microsoft.ServiceHub.Controller",
-                "dllhost",
-                "StartMenuExperienceHost",
-                "ServiceHub.IdentityHost",
-                "ServiceHub.VSDetouredHost",
-                "SearchHost",
-                "RuntimeBroker",
-                "Widgets",
-                "dllhost",
-                "WmiPrvSE",
-                "NvOAWrapperCache",
-                "ServiceHub.Host.dotnet.x64",
-                "TextInputHost",
-                "MSBuild",
-                "VBCSCompiler",
+            string[] NoKill = {
+                "cmd", "explorer", "panik", "taskmgr", "fences", "dwm", "devenv", "svchost", "conhost",
+                "ctfmon", "sihost", "nvcontainer", "Microsoft.ServiceHub.Controller", "dllhost",
+                "StartMenuExperienceHost", "ServiceHub.IdentityHost", "ServiceHub.VSDetouredHost",
+                "SearchHost", "RuntimeBroker", "Widgets", "dllhost", "WmiPrvSE", "NvOAWrapperCache",
+                "ServiceHub.Host.dotnet.x64", "TextInputHost", "MSBuild", "VBCSCompiler",
                 "VsDebugConsole"
             };
 
-            Process[] Proces = Process.GetProcesses();
-            using (StreamWriter writer = new StreamWriter(LogFil, append: false))
+
+            if (ProgramSettings.program?.app != null)
             {
-                foreach (Process process in Proces)
+                foreach (var app in ProgramSettings.program.app)
                 {
-                    string PanikKILLNam = process.ProcessName.ToLower();
-                    if (!NoKil.Any(excluded => PanikKILLNam.Equals(excluded.ToLower())))
+                    if (!NoKill.Contains(app._name.ToLower()))
+                        NoKill = NoKill.Append(app._name.ToLower()).ToArray();
+                }
+            }
+
+            Process[] Processes = Process.GetProcesses();
+            using (StreamWriter writer = new StreamWriter(LogFile, append: false))
+            {
+                foreach (Process process in Processes)
+                {
+                    string processName = process.ProcessName.ToLower();
+                    if (!NoKill.Any(excluded => processName.Equals(excluded.ToLower())))
                     {
                         try
                         {
@@ -107,22 +81,16 @@ namespace Panik
                     }
                 }
             }
-            Console.WriteLine($"Process termination complete. Log written to: {LogFil}");
+            Console.WriteLine($"Process termination complete. Log written to: {LogFile}");
             Console.ReadKey();
-
-            static void Json(out string json)
-            {
-                StreamReader r = new StreamReader("settings.json");
-                json = r.ReadToEnd();
-            }
         }
 
-        private static void ThrwCslErr(in string e)
+        private static void ThrwCslErr(string errorMessage)
         {
-            Console.WriteLine(e);
+            Console.WriteLine(errorMessage);
             Environment.Exit(0);
         }
+
         //panik
     }
 }
-

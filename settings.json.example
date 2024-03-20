@@ -1,0 +1,18 @@
+﻿{
+  "v": 1,
+  "logdir": "",
+  "program": {
+    "app": [
+      {
+        "_key": "0",
+        "_name": "app1",
+        "_isforced": false
+      },
+      {
+        "_key": "1",
+        "_name": "app2",
+        "_isforced": false
+      }
+    ]
+  }
+}
