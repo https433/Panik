@@ -1,36 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <AssemblyName>panik</AssemblyName>
-    <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
-    <PlatformTarget>x64</PlatformTarget>
-    <SignAssembly>False</SignAssembly>
-    <Company>abn</Company>
-    <Authors>abn666</Authors>
-    <AssemblyVersion>0.0.0.1</AssemblyVersion>
-    <FileVersion>0.0.2.1</FileVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PublishAot>true</PublishAot>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<AssemblyName>panik</AssemblyName>
+		<SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+		<PlatformTarget>x64</PlatformTarget>
+		<SignAssembly>False</SignAssembly>
+		<Company>abn</Company>
+		<Authors>abn666</Authors>
+		<AssemblyVersion>0.0.0.1</AssemblyVersion>
+		<FileVersion>0.0.2.1</FileVersion>
+		<ApplicationIcon>panik.ico</ApplicationIcon>
+		<Trimming>none</Trimming>
+		<IsTrimmable>false</IsTrimmable>
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DebugType>none</DebugType>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugType>none</DebugType>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="panik.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="panik.ico" />
+	</ItemGroup>
 
 </Project>

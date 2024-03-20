@@ -1,47 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Panik.Klass;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Newtonsoft.Json;
-using Panik.Klass;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Panik
 {
-    public record App(
-        [JsonProperty("_key")] string Key,
-        [JsonProperty("_name")] string Name,
-        [JsonProperty("_isforced")] bool IsForced
-    );
+    public class App
+    {
+        [JsonPropertyName("_key")]
+        public string? Key { get; set; }
 
-    public record Program(
-        [JsonProperty("app")] IReadOnlyList<App> Apps
-    );
+        [JsonPropertyName("_name")]
+        public string? Name { get; set; }
 
-    public record Root(
-        [JsonProperty("v")] int Version,
-        [JsonProperty("logdir")] string LogDir,
-        [JsonProperty("program")] Program Program
-    );
+        [JsonPropertyName("_isforced")]
+        public bool IsForced { get; set; }
+    }
+
+    public class Program
+    {
+        [JsonPropertyName("app")]
+        public IReadOnlyList<App>? Apps { get; set; }
+    }
+
+    public class Root
+    {
+        [JsonPropertyName("v")]
+        public int Version { get; set; }
+
+        [JsonPropertyName("logdir")]
+        public string LogDir { get; set; }
+
+        [JsonInclude]
+        public Program Program { get; set; }
+
+        public Root()
+        {
+            Version = 1;
+            LogDir = string.Empty;
+            Program = new Program();
+        }
+    }
 
     public class Klean
     {
         static void Main()
         {
-            string Settings = Path.Combine(Environment.CurrentDirectory, "settings.json");
-            if (!File.Exists(Settings))
-                ThrwCslErr($"{Settings} doesn't exist!");
+            string settingsPath = Path.Combine(Environment.CurrentDirectory, "settings.json");
+            if (!File.Exists(settingsPath))
+                ConsoleError($"{settingsPath} doesn't exist!");
 
-            string Json = File.ReadAllText(Settings);
+            string json = File.ReadAllText(settingsPath);
+            Root? Settings = JsonSerializer.Deserialize<Root>(document: JsonDocument.Parse(json));
 
-            Root ProgramSettings = JsonConvert.DeserializeObject<Root>(Json);
+            if (Settings == null)
+                ConsoleError("Error deserializing settings.json!");
 
-            if (ProgramSettings?.Version == null)
-                ThrwCslErr($"Error in settings.json: 'v' is null!");
-            if (ProgramSettings?.Version is > 1 or 0)
-                ThrwCslErr("Invalid settings version");
+            if (Settings?.Version > 1)
+                ConsoleError("Error in settings.json: 'v' is invalid!");
 
-            string LogFil = "ProcessTerminationLog.txt";
+            string LogFile = "ProcessTerminationLog.txt";
 
             string[] NoKil = {
                 "cmd", "explorer", "panik", "taskmgr", "fences", "dwm", "devenv", "svchost", "conhost",
@@ -52,45 +71,42 @@ namespace Panik
                 "VsDebugConsole"
             };
 
-
-            if (ProgramSettings?.Program?.Apps != null)
+            if (Settings?.Program?.Apps != null)
             {
-                foreach (var App in ProgramSettings.Program.Apps)
+                foreach (var app in Settings.Program.Apps)
                 {
-                    if (!NoKil.Contains(App.Name.ToLower()))
-                        NoKil = NoKil.Append(App.Name.ToLower()).ToArray();
+                    if (!NoKil.Contains(app.Name?.ToLower()))
+                        NoKil = [.. NoKil, app.Name?.ToLower()];
                 }
             }
 
-            Process[] Processes = Process.GetProcesses();
-            using (StreamWriter Writer = new StreamWriter(LogFil, append: false))
+            Process[] processes = Process.GetProcesses();
+            using (StreamWriter writer = new StreamWriter(LogFile, append: false))
             {
-                foreach (Process Process in Processes)
+                foreach (Process process in processes)
                 {
-                    string ProcessName = Process.ProcessName.ToLower();
-                    if (!NoKil.Any(Excluded => ProcessName.Equals(Excluded.ToLower())))
+                    string processName = process.ProcessName.ToLower();
+                    if (!NoKil.Any(excluded => processName.Equals(excluded.ToLower())))
                     {
                         try
                         {
-                            Kalm.Success(Writer, Process);
+                            Kalm.Success(writer, process);
                         }
-                        catch (Exception Ex)
+                        catch (Exception ex)
                         {
-                            UhOh.Fail(Writer, Process, Ex);
+                            UhOh.Fail(writer, process, ex);
                         }
                     }
                 }
             }
-            Console.WriteLine($"Process termination complete. Log written to: {LogFil}");
+            Console.WriteLine($"Process termination complete. Log written to: {LogFile}");
             Console.ReadKey();
         }
 
-        private static void ThrwCslErr(string ErrorMessage)
+        private static void ConsoleError(string errorMessage)
         {
-            Console.WriteLine(ErrorMessage);
+            Console.WriteLine(errorMessage);
             Environment.Exit(0);
         }
-
-        //panik
     }
 }
