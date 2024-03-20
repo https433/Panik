@@ -9,41 +9,41 @@ using Panik.Klass;
 namespace Panik
 {
     public record App(
-        [JsonProperty("_key")] string _key,
-        [JsonProperty("_name")] string _name,
-        [JsonProperty("_isforced")] bool _isforced
+        [JsonProperty("_key")] string Key,
+        [JsonProperty("_name")] string Name,
+        [JsonProperty("_isforced")] bool IsForced
     );
 
     public record Program(
-        [JsonProperty("app")] IReadOnlyList<App> app
+        [JsonProperty("app")] IReadOnlyList<App> Apps
     );
 
     public record Root(
-        [JsonProperty("v")] int v,
-        [JsonProperty("logdir")] string logdir,
-        [JsonProperty("program")] Program program
+        [JsonProperty("v")] int Version,
+        [JsonProperty("logdir")] string LogDir,
+        [JsonProperty("program")] Program Program
     );
 
     public class Klean
     {
         static void Main()
         {
-            string AppSettingsPath = Path.Combine(Environment.CurrentDirectory, "settings.json");
-            if (!File.Exists(AppSettingsPath))
-                ThrwCslErr($"{AppSettingsPath} doesn't exist!");
+            string Settings = Path.Combine(Environment.CurrentDirectory, "settings.json");
+            if (!File.Exists(Settings))
+                ThrwCslErr($"{Settings} doesn't exist!");
 
-            string json = File.ReadAllText(AppSettingsPath);
+            string Json = File.ReadAllText(Settings);
 
-            Root ProgramSettings = JsonConvert.DeserializeObject<Root>(json);
+            Root ProgramSettings = JsonConvert.DeserializeObject<Root>(Json);
 
-            if (ProgramSettings?.v == null)
+            if (ProgramSettings?.Version == null)
                 ThrwCslErr($"Error in settings.json: 'v' is null!");
-            if (ProgramSettings?.v is > 1 or 0)
+            if (ProgramSettings?.Version is > 1 or 0)
                 ThrwCslErr("Invalid settings version");
 
-            string LogFile = "ProcessTerminationLog.txt";
+            string LogFil = "ProcessTerminationLog.txt";
 
-            string[] NoKill = {
+            string[] NoKil = {
                 "cmd", "explorer", "panik", "taskmgr", "fences", "dwm", "devenv", "svchost", "conhost",
                 "ctfmon", "sihost", "nvcontainer", "Microsoft.ServiceHub.Controller", "dllhost",
                 "StartMenuExperienceHost", "ServiceHub.IdentityHost", "ServiceHub.VSDetouredHost",
@@ -53,41 +53,41 @@ namespace Panik
             };
 
 
-            if (ProgramSettings.program?.app != null)
+            if (ProgramSettings?.Program?.Apps != null)
             {
-                foreach (var app in ProgramSettings.program.app)
+                foreach (var App in ProgramSettings.Program.Apps)
                 {
-                    if (!NoKill.Contains(app._name.ToLower()))
-                        NoKill = NoKill.Append(app._name.ToLower()).ToArray();
+                    if (!NoKil.Contains(App.Name.ToLower()))
+                        NoKil = NoKil.Append(App.Name.ToLower()).ToArray();
                 }
             }
 
             Process[] Processes = Process.GetProcesses();
-            using (StreamWriter writer = new StreamWriter(LogFile, append: false))
+            using (StreamWriter Writer = new StreamWriter(LogFil, append: false))
             {
-                foreach (Process process in Processes)
+                foreach (Process Process in Processes)
                 {
-                    string processName = process.ProcessName.ToLower();
-                    if (!NoKill.Any(excluded => processName.Equals(excluded.ToLower())))
+                    string ProcessName = Process.ProcessName.ToLower();
+                    if (!NoKil.Any(Excluded => ProcessName.Equals(Excluded.ToLower())))
                     {
                         try
                         {
-                            Kalm.Success(writer, process);
+                            Kalm.Success(Writer, Process);
                         }
-                        catch (Exception ex)
+                        catch (Exception Ex)
                         {
-                            UhOh.Fail(writer, process, ex);
+                            UhOh.Fail(Writer, Process, Ex);
                         }
                     }
                 }
             }
-            Console.WriteLine($"Process termination complete. Log written to: {LogFile}");
+            Console.WriteLine($"Process termination complete. Log written to: {LogFil}");
             Console.ReadKey();
         }
 
-        private static void ThrwCslErr(string errorMessage)
+        private static void ThrwCslErr(string ErrorMessage)
         {
-            Console.WriteLine(errorMessage);
+            Console.WriteLine(ErrorMessage);
             Environment.Exit(0);
         }
 
